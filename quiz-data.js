@@ -1,25 +1,13 @@
 // Shared by index.html (the quiz) and results.html (the scoreboard).
 
-// Where attempts are recorded. Leave url/key empty to switch tracking off.
-// The key is a publishable one: it can only call the three quiz_* functions.
-const TRACK_CONFIG = {
-  url: "",
-  key: ""
-};
-
-// Calls a database function. Never throws; resolves to null on any failure
-// so a tracking problem can never interrupt the quiz.
-function trackCall(fn, args) {
-  if (!TRACK_CONFIG.url || !TRACK_CONFIG.key) return Promise.resolve(null);
-  return fetch(TRACK_CONFIG.url + "/rest/v1/rpc/" + fn, {
+// Sends one scoreboard action to /api/quiz. Never throws; resolves to null on
+// any failure so a tracking problem can never interrupt the quiz.
+function trackCall(action, args) {
+  return fetch("/api/quiz", {
     method: "POST",
     keepalive: true,
-    headers: {
-      "Content-Type": "application/json",
-      "apikey": TRACK_CONFIG.key,
-      "Authorization": "Bearer " + TRACK_CONFIG.key
-    },
-    body: JSON.stringify(args)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(Object.assign({ action: action }, args))
   }).then(function (r) {
     return r.ok ? r.json().catch(function () { return null; }) : null;
   }).catch(function () { return null; });

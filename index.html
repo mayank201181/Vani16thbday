@@ -569,7 +569,7 @@
 
       // Scoreboard: open a new attempt; later saves queue behind this promise
       state.attemptSaved = false;
-      state.attemptId = trackCall("quiz_start", { p_name: name });
+      state.attemptId = trackCall("start", { name: name }).then((r) => (r && r.id) || null);
 
       hudName.textContent = name;
       welcomeScreen.classList.add("hidden");
@@ -718,7 +718,7 @@
       const answers = Object.assign({}, state.answers);
       state.attemptId = state.attemptId.then((id) => {
         if (!id) return id;
-        return trackCall("quiz_save", { p_id: id, p_answers: answers, p_completed: completed }).then(() => id);
+        return trackCall("save", { id: id, answers: answers, completed: completed }).then(() => id);
       });
     }
 

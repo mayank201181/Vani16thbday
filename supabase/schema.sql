@@ -1,6 +1,9 @@
--- Scoreboard for the Sweet 16 quiz.
--- The public web page holds only a publishable key. Both tables are closed to
--- it; everything goes through the four functions below.
+-- Scoreboard for the Sweet 16 quiz, as applied to the database.
+-- The web page never talks to the database: api/quiz.js does, with a key held
+-- in Vercel environment variables. Both tables have row level security on and
+-- no policies, so that key cannot read or write them directly; everything
+-- goes through the functions below. Self-contained: dropping the two tables
+-- and five quiz_* functions removes it completely.
 
 create table public.quiz_attempts (
   id uuid primary key default gen_random_uuid(),
@@ -8,10 +11,10 @@ create table public.quiz_attempts (
   started_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
   completed_at timestamptz,
-  answers jsonb not null default '{}'::jsonb   -- { "<question id>": <option index> }
+  answers jsonb not null default '{}'::jsonb,  -- { "<question id>": <option index> }
+  hidden boolean not null default false         -- set by "Remove this entry"
 );
 alter table public.quiz_attempts enable row level security;
-revoke all on table public.quiz_attempts from anon, authenticated;
 
 -- One row holding the SHA-256 of the scoreboard passcode (set separately).
 create table public.quiz_admin (
@@ -19,7 +22,6 @@ create table public.quiz_admin (
   passcode_sha256 text not null
 );
 alter table public.quiz_admin enable row level security;
-revoke all on table public.quiz_admin from anon, authenticated;
 
 create function public.quiz_start(p_name text)
 returns uuid language plpgsql security definer set search_path = '' as $$
@@ -63,17 +65,13 @@ create function public.quiz_results(p_passcode text)
 returns setof public.quiz_attempts language plpgsql security definer set search_path = '' as $$
 begin
   perform public.quiz_check_passcode(p_passcode);
-  return query select * from public.quiz_attempts order by started_at desc;
+  return query select * from public.quiz_attempts where not hidden order by started_at desc;
 end $$;
 
-create function public.quiz_delete(p_passcode text, p_id uuid)
+-- "Remove this entry" hides the row rather than erasing it.
+create function public.quiz_hide(p_passcode text, p_id uuid)
 returns void language plpgsql security definer set search_path = '' as $$
 begin
   perform public.quiz_check_passcode(p_passcode);
-  delete from public.quiz_attempts where id = p_id;
+  update public.quiz_attempts set hidden = true, updated_at = now() where id = p_id;
 end $$;
-
-revoke execute on function public.quiz_start(text), public.quiz_save(uuid, jsonb, boolean),
-  public.quiz_check_passcode(text), public.quiz_results(text), public.quiz_delete(text, uuid) from public, anon, authenticated;
-grant execute on function public.quiz_start(text), public.quiz_save(uuid, jsonb, boolean),
-  public.quiz_results(text), public.quiz_delete(text, uuid) to anon, authenticated;
