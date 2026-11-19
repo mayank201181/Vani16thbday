@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="robots" content="noindex, nofollow" />
+  <title>Vani's Sweet 16 — Scoreboard</title>
+  <style>
+    :root {
+      --bg: #09080d;
+      --panel: #16131f;
+      --panel-2: #1e1a2a;
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #ffffff;
+      --muted: rgba(255, 255, 255, 0.62);
+      --gold: #fcd34d;
+      --good: #6ee7b7;
+      --bad: #fda4af;
+    }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { margin: 0; background: var(--bg); color: var(--text); }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, sans-serif;
+      font-size: 15px;
+      line-height: 1.45;
+      padding: 20px 16px 48px;
+    }
+    main { max-width: 720px; margin: 0 auto; }
+    h1 { font-family: Georgia, "Times New Roman", serif; font-size: 26px; margin: 0 0 2px; }
+    h2 { font-size: 13px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold); margin: 28px 0 10px; }
+    p { margin: 0; }
+    .sub { color: var(--muted); font-size: 13px; }
+    .hidden { display: none !important; }
+
+    button, input, select { font: inherit; color: inherit; }
+    .btn {
+      border: 1px solid var(--line); background: var(--panel-2); border-radius: 10px;
+      padding: 9px 14px; font-weight: 600; font-size: 13px; cursor: pointer;
+    }
+    .btn:active { transform: scale(0.98); }
+    .btn-gold { background: var(--gold); color: #1a1405; border-color: var(--gold); }
+    .btn-quiet { background: transparent; color: var(--muted); font-weight: 500; }
+
+    .gate { background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 18px; margin-top: 22px; }
+    .gate label { display: block; font-size: 12px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin-bottom: 6px; }
+    .gate-row { display: flex; gap: 8px; }
+    .gate input {
+      flex: 1; min-width: 0; background: rgba(255,255,255,0.08); border: 1px solid var(--line);
+      border-radius: 10px; padding: 10px 12px;
+    }
+    .gate input:focus { outline: none; border-color: var(--gold); }
+    .msg { margin-top: 10px; font-size: 13px; color: var(--bad); }
+
+    .toolbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+    .toolbar .left { display: flex; gap: 8px; align-items: center; }
+    select.btn { appearance: none; -webkit-appearance: none; padding-right: 14px; }
+
+    .tiles { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 14px; }
+    @media (max-width: 480px) { .tiles { grid-template-columns: repeat(2, 1fr); } }
+    .tile { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+    .tile .n { font-size: 24px; font-weight: 800; color: var(--gold); line-height: 1.1; font-variant-numeric: tabular-nums; }
+    .tile .l { font-size: 12px; color: var(--muted); margin-top: 2px; }
+
+    .list { display: grid; gap: 8px; }
+    .row { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; overflow: hidden; }
+    .row-head {
+      width: 100%; display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      background: none; border: 0; text-align: left; cursor: pointer;
+    }
+    .rank { width: 22px; color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; flex: none; }
+    .who { flex: 1; min-width: 0; }
+    .who .name { font-weight: 700; overflow-wrap: anywhere; }
+    .who .meta { font-size: 12px; color: var(--muted); }
+    .score { flex: none; text-align: right; font-variant-numeric: tabular-nums; }
+    .score .n { font-size: 18px; font-weight: 800; color: var(--gold); }
+    .score .n.partial { color: var(--muted); }
+    .score .l { font-size: 11px; color: var(--muted); }
+    .detail { border-top: 1px solid var(--line); padding: 10px 14px 12px; background: var(--panel-2); }
+    .ans { display: flex; gap: 10px; padding: 6px 0; font-size: 13px; border-bottom: 1px solid rgba(255,255,255,0.06); }
+    .ans:last-of-type { border-bottom: 0; }
+    .ans .q { color: var(--muted); width: 28px; flex: none; }
+    .ans .body { flex: 1; min-width: 0; }
+    .ans .qt { color: var(--muted); font-size: 12px; }
+    .right { color: var(--good); font-weight: 600; }
+    .wrong { color: var(--bad); font-weight: 600; }
+    .none { color: var(--muted); }
+    .detail-foot { display: flex; justify-content: flex-end; margin-top: 8px; }
+
+    .qstat { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 10px 14px; }
+    .qstat + .qstat { margin-top: 8px; }
+    .qstat .top { display: flex; justify-content: space-between; gap: 12px; font-size: 13px; }
+    .qstat .pct { font-weight: 800; color: var(--gold); font-variant-numeric: tabular-nums; flex: none; }
+    .bar { height: 5px; border-radius: 99px; background: rgba(255,255,255,0.12); margin-top: 8px; overflow: hidden; }
+    .bar > div { height: 100%; background: var(--gold); border-radius: 99px; }
+    .qstat .key { font-size: 12px; color: var(--muted); margin-top: 6px; }
+    .empty { color: var(--muted); padding: 22px 0; text-align: center; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Vani's Sweet 16 Scoreboard</h1>
+    <p class="sub">Everyone who started the quiz, and how they did.</p>
+
+    <section id="gate" class="gate">
+      <label for="pass">Passcode</label>
+      <div class="gate-row">
+        <input id="pass" type="password" autocomplete="current-password" />
+        <button id="openBtn" class="btn btn-gold" type="button">Open</button>
+      </div>
+      <p id="gateMsg" class="msg hidden"></p>
+    </section>
+
+    <section id="board" class="hidden">
+      <div class="toolbar">
+        <div class="left">
+          <select id="sortSel" class="btn" aria-label="Sort order">
+            <option value="score">Sort: highest score</option>
+            <option value="new">Sort: newest first</option>
+          </select>
+          <button id="refreshBtn" class="btn" type="button">Refresh</button>
+        </div>
+        <button id="lockBtn" class="btn btn-quiet" type="button">Lock</button>
+      </div>
+      <p id="stamp" class="sub" style="margin-top:8px"></p>
+
+      <div class="tiles">
+        <div class="tile"><div id="tStarted" class="n">0</div><div class="l">Started</div></div>
+        <div class="tile"><div id="tFinished" class="n">0</div><div class="l">Finished</div></div>
+        <div class="tile"><div id="tAvg" class="n">–</div><div class="l">Average score</div></div>
+        <div class="tile"><div id="tTop" class="n">–</div><div class="l">Top score</div></div>
+      </div>
+
+      <h2>Players</h2>
+      <div id="list" class="list"></div>
+
+      <h2>By question</h2>
+      <p class="sub" style="margin-bottom:10px">Share of answers that matched Vani's.</p>
+      <div id="qstats"></div>
+    </section>
+  </main>
+
+  <script src="./quiz-data.js"></script>
+  <script>
+    const PASS_KEY = "vani16_scoreboard_pass";
+    const $ = (id) => document.getElementById(id);
+    let rows = [];
+    let openId = null;
+    let passcode = "";
+
+    function el(tag, cls, text) {
+      const n = document.createElement(tag);
+      if (cls) n.className = cls;
+      if (text !== undefined) n.textContent = text;
+      return n;
+    }
+
+    function scoreOf(answers) {
+      let s = 0;
+      QUIZ.forEach((q) => { if (answers && answers[q.id] === q.correctIndex) s += 1; });
+      return s;
+    }
+    function countOf(answers) {
+      return QUIZ.filter((q) => answers && answers[q.id] !== undefined && answers[q.id] !== null).length;
+    }
+    function when(iso) {
+      const d = new Date(iso);
+      return d.toLocaleString(undefined, { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
+    }
+
+    async function rpc(fn, args) {
+      const r = await fetch(TRACK_CONFIG.url + "/rest/v1/rpc/" + fn, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "apikey": TRACK_CONFIG.key,
+          "Authorization": "Bearer " + TRACK_CONFIG.key
+        },
+        body: JSON.stringify(args)
+      });
+      let body = null;
+      try { body = await r.json(); } catch (e) {}
+      if (!r.ok) {
+        const err = new Error((body && body.message) || ("Request failed (" + r.status + ")"));
+        err.status = r.status;
+        throw err;
+      }
+      return body;
+    }
+
+    function showGate(message) {
+      $("board").classList.add("hidden");
+      $("gate").classList.remove("hidden");
+      $("gateMsg").textContent = message || "";
+      $("gateMsg").classList.toggle("hidden", !message);
+    }
+
+    async function load() {
+      if (!TRACK_CONFIG.url || !TRACK_CONFIG.key) {
+        showGate("Score tracking is not connected yet.");
+        return;
+      }
+      $("openBtn").disabled = true;
+      $("refreshBtn").disabled = true;
+      try {
+        rows = await rpc("quiz_results", { p_passcode: passcode }) || [];
+        try { localStorage.setItem(PASS_KEY, passcode); } catch (e) {}
+        $("gate").classList.add("hidden");
+        $("board").classList.remove("hidden");
+        render();
+      } catch (e) {
+        try { localStorage.removeItem(PASS_KEY); } catch (e2) {}
+        showGate(/passcode/i.test(e.message) ? "That passcode is not right." : "Could not load results: " + e.message);
+      } finally {
+        $("openBtn").disabled = false;
+        $("refreshBtn").disabled = false;
+      }
+    }
+
+    function render() {
+      const data = rows.map((r) => ({
+        id: r.id,
+        name: r.player_name,
+        started: r.started_at,
+        done: !!r.completed_at,
+        answers: r.answers || {},
+        score: scoreOf(r.answers),
+        count: countOf(r.answers)
+      }));
+
+      const finished = data.filter((d) => d.done);
+      $("tStarted").textContent = data.length;
+      $("tFinished").textContent = finished.length;
+      $("tAvg").textContent = finished.length
+        ? (finished.reduce((a, d) => a + d.score, 0) / finished.length).toFixed(1)
+        : "–";
+      $("tTop").textContent = finished.length ? Math.max(...finished.map((d) => d.score)) + "/" + QUIZ.length : "–";
+      $("stamp").textContent = "Updated " + new Date().toLocaleTimeString(undefined, { hour: "numeric", minute: "2-digit" });
+
+      const sorted = data.slice();
+      if ($("sortSel").value === "score") {
+        sorted.sort((a, b) => (b.done - a.done) || (b.score - a.score) || (new Date(a.started) - new Date(b.started)));
+      } else {
+        sorted.sort((a, b) => new Date(b.started) - new Date(a.started));
+      }
+
+      const list = $("list");
+      list.replaceChildren();
+      if (!sorted.length) list.appendChild(el("p", "empty", "Nobody has started the quiz yet."));
+
+      sorted.forEach((d, i) => {
+        const row = el("div", "row");
+        const head = el("button", "row-head");
+        head.type = "button";
+        head.setAttribute("aria-expanded", String(openId === d.id));
+        head.appendChild(el("span", "rank", String(i + 1)));
+        const who = el("span", "who");
+        who.appendChild(el("div", "name", d.name));
+        who.appendChild(el("div", "meta", when(d.started) + (d.done ? "" : d.count ? " · stopped after Q" + d.count : " · did not answer any")));
+        head.appendChild(who);
+        const sc = el("span", "score");
+        sc.appendChild(el("div", "n" + (d.done ? "" : " partial"), d.score + "/" + (d.done ? QUIZ.length : d.count)));
+        sc.appendChild(el("div", "l", d.done ? "finished" : "unfinished"));
+        head.appendChild(sc);
+        head.addEventListener("click", () => { openId = openId === d.id ? null : d.id; render(); });
+        row.appendChild(head);
+
+        if (openId === d.id) {
+          const detail = el("div", "detail");
+          QUIZ.forEach((q, qi) => {
+            const pick = d.answers[q.id];
+            const line = el("div", "ans");
+            line.appendChild(el("span", "q", "Q" + (qi + 1)));
+            const body = el("div", "body");
+            body.appendChild(el("div", "qt", q.question));
+            if (pick === undefined || pick === null) {
+              body.appendChild(el("div", "none", "No answer"));
+            } else if (pick === q.correctIndex) {
+              body.appendChild(el("div", "right", "✓ " + q.options[pick]));
+            } else {
+              body.appendChild(el("div", "wrong", "✕ " + (q.options[pick] || "?")));
+              body.appendChild(el("div", "none", "Vani's answer: " + q.options[q.correctIndex]));
+            }
+            line.appendChild(body);
+            detail.appendChild(line);
+          });
+          const foot = el("div", "detail-foot");
+          const del = el("button", "btn btn-quiet", "Remove this entry");
+          del.type = "button";
+          del.addEventListener("click", async () => {
+            if (!confirm("Remove " + d.name + "'s entry from the scoreboard? This cannot be undone.")) return;
+            try {
+              await rpc("quiz_delete", { p_passcode: passcode, p_id: d.id });
+              openId = null;
+              await load();
+            } catch (e) {
+              alert("Could not remove it: " + e.message);
+            }
+          });
+          foot.appendChild(del);
+          detail.appendChild(foot);
+          row.appendChild(detail);
+        }
+        list.appendChild(row);
+      });
+
+      const qs = $("qstats");
+      qs.replaceChildren();
+      QUIZ.forEach((q, qi) => {
+        const answered = data.filter((d) => d.answers[q.id] !== undefined && d.answers[q.id] !== null);
+        const right = answered.filter((d) => d.answers[q.id] === q.correctIndex).length;
+        const pct = answered.length ? Math.round((right / answered.length) * 100) : null;
+        const box = el("div", "qstat");
+        const top = el("div", "top");
+        top.appendChild(el("span", "", "Q" + (qi + 1) + ". " + q.question));
+        top.appendChild(el("span", "pct", pct === null ? "–" : pct + "%"));
+        box.appendChild(top);
+        const bar = el("div", "bar");
+        const fill = el("div");
+        fill.style.width = (pct || 0) + "%";
+        bar.appendChild(fill);
+        box.appendChild(bar);
+        box.appendChild(el("div", "key", "Vani's answer: " + q.options[q.correctIndex] + " · " + right + " of " + answered.length + " got it"));
+        qs.appendChild(box);
+      });
+    }
+
+    $("openBtn").addEventListener("click", () => { passcode = $("pass").value.trim(); if (passcode) load(); });
+    $("pass").addEventListener("keydown", (e) => { if (e.key === "Enter") $("openBtn").click(); });
+    $("refreshBtn").addEventListener("click", load);
+    $("sortSel").addEventListener("change", render);
+    $("lockBtn").addEventListener("click", () => {
+      try { localStorage.removeItem(PASS_KEY); } catch (e) {}
+      passcode = ""; rows = []; $("pass").value = "";
+      showGate("");
+    });
+
+    try { passcode = localStorage.getItem(PASS_KEY) || ""; } catch (e) {}
+    if (passcode) load();
+  </script>
+</body>
+</html>
