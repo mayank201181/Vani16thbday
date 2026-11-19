@@ -1,6 +1,8 @@
 -- Scoreboard for the Sweet 16 quiz, as applied to the database.
--- The web page never talks to the database: api/quiz.js does, with a key held
--- in Vercel environment variables. Both tables have row level security on and
+-- The web page never talks to the database. It posts to /api/quiz, which a
+-- routing rule in the Vercel project forwards to the edge function in
+-- supabase/functions/vani16-quiz; that function runs inside the database
+-- project and uses its built-in key. Both tables have row level security on and
 -- no policies, so that key cannot read or write them directly; everything
 -- goes through the functions below. Self-contained: dropping the two tables
 -- and five quiz_* functions removes it completely.
